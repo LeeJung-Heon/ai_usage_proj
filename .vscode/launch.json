@@ -1,0 +1,44 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ai_usage_proj}",
+            "name": "Debug AgentMeter",
+            "target": "AgentMeter",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug AgentMeter"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ai_usage_proj}",
+            "name": "Release AgentMeter",
+            "target": "AgentMeter",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release AgentMeter"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ai_usage_proj}",
+            "name": "Debug AgentMeterCapture",
+            "target": "AgentMeterCapture",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug AgentMeterCapture"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ai_usage_proj}",
+            "name": "Release AgentMeterCapture",
+            "target": "AgentMeterCapture",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release AgentMeterCapture"
+        }
+    ]
+}
