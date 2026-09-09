@@ -1,11 +1,12 @@
 import Foundation
 
 public enum ClaudeQuotaError: LocalizedError {
-    case credentialsUnavailable, authentication, rateLimited, invalidResponse, unavailable
+    case credentialsUnavailable, credentialsNeedApproval, authentication, rateLimited, invalidResponse, unavailable
 
     public var errorDescription: String? {
         switch self {
         case .credentialsUnavailable: "Claude 로그인 정보를 읽을 수 없습니다. Claude Code에서 로그인 상태를 확인하세요."
+        case .credentialsNeedApproval: "Claude 키체인 접근 허용이 필요합니다. 연결 및 설정에서 ‘Claude 로그인 접근 허용’을 누르세요."
         case .authentication: "Claude 한도 조회 인증이 만료되었거나 허용되지 않았습니다. Claude Code에서 다시 로그인하세요."
         case .rateLimited: "Claude 한도 조회가 잠시 제한되었습니다. 잠시 후 다시 시도하세요."
         case .invalidResponse: "Claude 한도 응답을 읽지 못했습니다."

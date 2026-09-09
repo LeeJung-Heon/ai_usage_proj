@@ -67,7 +67,7 @@ final class UsageStore: ObservableObject {
         let input = events.reduce(0) { $0 + $1.input + $1.cacheRead + $1.cacheWrite }
         return input > 0 ? Double(events.reduce(0) { $0 + $1.cacheRead }) / Double(input) * 100 : 0
     }
-    func refresh() async {
+    func refresh(allowClaudeInteraction: Bool = false) async {
         guard !isRefreshing else { return }
         isRefreshing = true
         async let antigravityRefresh = antigravityMonitor.refresh()
@@ -79,7 +79,7 @@ final class UsageStore: ObservableObject {
             catch { bridgeReadError = "Claude 한도 파일을 읽지 못했습니다. Claude Code에서 다음 응답 후 다시 확인하세요." }
         }
         do {
-            let token = try ClaudeCredentials.accessToken()
+            let token = try ClaudeCredentials.accessToken(allowInteraction: allowClaudeInteraction)
             let quotas = try await ClaudeQuotaClient.fetch(accessToken: token)
             scanned.quotas.removeAll { $0.provider == .claude }
             scanned.quotas += quotas

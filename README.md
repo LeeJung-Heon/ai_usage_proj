@@ -14,15 +14,76 @@ Claude Code, Codex, Gemini CLI, Antigravity의 사용량을 모아 보는 **Swif
 
 ![Agent Meter 사용 추이: 일별 토큰 차트와 모델별 사용량 표](docs/images/usage-details.jpg)
 
-## 실행
+## macOS 앱 설치
 
-빌드된 앱: [`dist/Agent Meter.app`](dist/Agent%20Meter.app)
+### 설치 조건
+
+- **macOS 14 이상**이 필요합니다.
+- 포함된 [`dist/Agent Meter.app`](dist/Agent%20Meter.app)은 **Apple Silicon(M 시리즈) Mac용**입니다. Intel Mac용 실행 파일은 포함되어 있지 않습니다.
+- 빌드된 앱을 실행할 때는 Xcode나 별도 API 키가 필요하지 않습니다. 소스에서 직접 빌드할 때는 **Swift 6 툴체인을 제공하는 Xcode**가 필요합니다.
+
+### 빌드된 앱 설치하기
+
+1. Finder에서 이 프로젝트의 `dist` 폴더를 엽니다. 압축 파일로 전달받았다면 먼저 압축을 풉니다.
+2. `Agent Meter.app`을 **응용 프로그램(`/Applications`)** 폴더로 복사합니다. 기존 앱이 실행 중이면 먼저 종료합니다.
+3. 응용 프로그램 폴더에서 **Agent Meter**를 두 번 클릭합니다.
+4. 대시보드와 메뉴 막대의 에이전트 로고가 나타나면 설치가 완료된 것입니다. 한도 정보가 있으면 메뉴 막대에 `42% · 2h 15m`처럼 표시됩니다.
+
+프로젝트 폴더에서 터미널로 설치하려면 다음 명령을 실행합니다.
+
+```bash
+ditto "dist/Agent Meter.app" "/Applications/Agent Meter.app"
+open "/Applications/Agent Meter.app"
+```
+
+응용 프로그램 폴더에 쓰기 권한이 없으면 Finder에서 관리자 인증을 하거나, 홈 폴더의 `Applications` 폴더에 복사해 실행할 수 있습니다.
+
+### 첫 실행이 차단되는 경우
+
+현재 앱은 개발 인증서로 서명하며 Apple 공증은 포함하지 않습니다. 다른 Mac에서 전달받은 앱은 개발자를 확인할 수 없다는 이유로 실행이 차단될 수 있습니다.
+
+직접 빌드했거나 출처와 무결성을 확인한 앱이라면, 한 번 실행을 시도한 뒤 **시스템 설정 → 개인정보 보호 및 보안 → 그래도 열기**에서 허용하고 다시 표시되는 창에서 **열기**를 누릅니다. 자세한 절차는 [Apple의 Mac 앱 실행 안내](https://support.apple.com/ko-kr/102445)를 참고하세요.
+
+### 소스에서 직접 빌드하기
+
+Xcode를 설치하고 최초 실행에 필요한 설정을 마친 뒤, 코드 서명에 사용할 Apple Development 또는 Developer ID Application 인증서를 준비합니다. `Package.swift`가 있는 프로젝트 폴더에서 실행합니다.
+
+```bash
+swift --version
+swift test
+./scripts/build-app.sh
+```
+
+Swift 버전이 6 이상인지 확인하세요. 빌드가 완료되면 `dist/Agent Meter.app`이 생성됩니다. 위의 **빌드된 앱 설치하기** 절차로 복사하거나, 설치 전에 다음 명령으로 실행해 볼 수 있습니다.
 
 ```bash
 open "dist/Agent Meter.app"
 ```
 
-macOS 14 이상. 현재 빌드 머신 아키텍처용으로 생성됩니다. 이 작업 환경에서 만든 앱은 Apple Silicon용이며 로컬 실행을 위한 ad-hoc 서명을 사용합니다. 외부 배포용 Developer ID 서명·공증은 포함하지 않습니다.
+빌드 스크립트는 실행한 Mac의 현재 아키텍처용 앱을 생성합니다. Intel Mac에서의 빌드·실행은 별도 검증하지 않았습니다.
+
+사용 가능한 개발 인증서가 하나이면 자동 선택합니다. 인증서가 여러 개라면 다음 명령으로 목록을 확인하고 사용할 인증서의 SHA-1 값을 지정하세요. 이후 빌드에도 같은 개발자 인증서를 사용합니다.
+
+```bash
+security find-identity -v -p codesigning
+AGENTMETER_SIGNING_IDENTITY="인증서의 SHA-1 값" ./scripts/build-app.sh
+```
+
+인증서 없이 임시로 빌드하려면 `AGENTMETER_SIGNING_IDENTITY=- ./scripts/build-app.sh`를 사용할 수 있습니다. 이 ad-hoc 서명 방식은 업데이트마다 앱 식별 정보가 달라져 접근 허용을 다시 요청할 수 있습니다.
+
+### 설치 후 연결 확인
+
+앱의 **연결 및 설정**에서 Claude Code·Codex·Gemini CLI의 기록 폴더를 확인하세요. 기본 경로를 사용한다면 로컬 기록을 자동으로 읽습니다. Antigravity는 해당 앱을 실행하고 로그인한 상태에서 Agent Meter를 새로고침하면 연결됩니다.
+
+사용량 90% 알림을 받으려면 최초 알림 권한 요청을 허용하세요. Claude statusLine 대체 연결을 사용할 경우에는 **앱을 설치할 위치에 복사한 뒤** 연결을 설정해야 수집기 경로가 유지됩니다. 자세한 내용은 아래 **연결 범위**를 참고하세요.
+
+새 버전으로 교체할 때는 Agent Meter를 종료하고 같은 설치 위치의 앱을 교체한 뒤 다시 실행합니다.
+
+### 접근 허용을 유지하려면
+
+앱과 수집기는 같은 개발 인증서로 서명됩니다. 같은 설치 위치와 개발자 서명을 유지하면 macOS가 업데이트를 동일한 앱으로 식별할 수 있습니다. 기존 ad-hoc 버전에서 처음 전환할 때는 접근 허용이 한 번 더 필요할 수 있습니다. 사용자가 권한을 철회하거나 개발자가 바뀌면 다시 허용해야 할 수 있습니다. 관련 원리는 [Apple의 코드 서명 식별 요구사항 문서](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements)를 참고하세요.
+
+알림은 macOS에 저장된 허용 여부를 먼저 확인하며, 결정된 권한을 자동 갱신 때 다시 요청하지 않습니다. Claude 키체인 조회는 자동·수동 새로고침 모두 인증 창을 차단합니다. 최초 접근 허용은 **연결 및 설정 → Claude 구독 한도 → Claude 로그인 접근 허용**에서 진행합니다. macOS 창에 로그인 키체인 암호를 입력하고 **항상 허용**을 선택하면 접근 허용이 저장됩니다. **허용**은 해당 요청에만 적용됩니다. 거부하거나 취소해도 다음 자동 갱신에서 다시 묻지 않으며, 마지막 한도와 접근 허용 안내를 표시합니다.
 
 ## 기능
 
@@ -57,7 +118,7 @@ Codex 폴더를 변경할 때는 `sessions`의 **상위 폴더**를 선택하세
 
 ### Claude 구독 한도 연결
 
-앱 실행, 60초 자동 갱신, 수동 새로고침 때 Claude Code가 사용하는 `https://api.anthropic.com/api/oauth/usage`를 조회합니다. macOS 키체인의 기존 `Claude Code-credentials` 로그인에서 액세스 토큰을 메모리로 읽어 Claude 서버에만 전송하며, 디스크에 저장하거나 리디렉션을 따라가지 않습니다. 키체인 권한 요청이나 로그인 변경은 자동으로 하지 않습니다. 조회 실패 시 이유를 표시하고 마지막 기록의 실제 확인 시각을 유지합니다. 이 방식은 Claude Code의 내부 한도 조회 경로이므로 제공사 변경에 영향을 받을 수 있습니다.
+앱 실행, 60초 자동 갱신, 수동 새로고침 때 Claude Code가 사용하는 `https://api.anthropic.com/api/oauth/usage`를 조회합니다. macOS 키체인의 기존 `Claude Code-credentials` 로그인에서 액세스 토큰을 메모리로 읽어 Claude 서버에만 전송하며, 디스크에 저장하거나 리디렉션을 따라가지 않습니다. 자동 조회는 로그인 키체인의 접근 확인 창과 인증 UI를 모두 차단합니다. 접근 권한이 없으면 **연결 및 설정 → Claude 로그인 접근 허용**에서 직접 허용할 수 있습니다. 로그인 변경은 하지 않습니다. 조회 실패 시 이유를 표시하고 마지막 기록의 실제 확인 시각을 유지합니다. 이 방식은 Claude Code의 내부 한도 조회 경로이므로 제공사 변경에 영향을 받을 수 있습니다.
 
 아래 statusLine 연결은 직접 조회가 불가능할 때 사용할 수 있는 대체 수집 경로입니다.
 

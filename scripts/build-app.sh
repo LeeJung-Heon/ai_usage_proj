@@ -1,6 +1,20 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Ad-hoc signatures identify a particular binary hash, so macOS permission
+# decisions may not survive an update. Keep the app and helper on one identity.
+SIGNING_IDENTITY="${AGENTMETER_SIGNING_IDENTITY:-}"
+if [ -z "$SIGNING_IDENTITY" ]; then
+    SIGNING_CANDIDATES="$(security find-identity -v -p codesigning | awk '/"(Apple Development:|Developer ID Application:)/ { print $2 }')"
+    SIGNING_COUNT="$(printf '%s\n' "$SIGNING_CANDIDATES" | awk 'NF { count++ } END { print count+0 }')"
+    if [ "$SIGNING_COUNT" -ne 1 ]; then
+        printf '%s\n' 'Set AGENTMETER_SIGNING_IDENTITY to an existing code-signing certificate name or SHA-1 hash.' >&2
+        printf '%s\n' 'List certificates with: security find-identity -v -p codesigning' >&2
+        printf '%s\n' 'For a temporary ad-hoc build only, set AGENTMETER_SIGNING_IDENTITY=- (permissions may be requested again after updates).' >&2
+        exit 1
+    fi
+    SIGNING_IDENTITY="$SIGNING_CANDIDATES"
+fi
 swift build -c release
 BINARY_DIR="$(swift build -c release --show-bin-path)"
 OUTPUT_APP_DIR="$PWD/dist/Agent Meter.app"
@@ -39,8 +53,8 @@ cat > "$APP_DIR/Contents/Info.plist" <<'PLIST'
 </dict></plist>
 PLIST
 xattr -cr "$APP_DIR"
-codesign --force --sign - "$APP_DIR/Contents/Resources/AgentMeterCapture"
-codesign --force --sign - "$APP_DIR"
+codesign --force --sign "$SIGNING_IDENTITY" --identifier local.agentmeter.mac.capture "$APP_DIR/Contents/Resources/AgentMeterCapture"
+codesign --force --sign "$SIGNING_IDENTITY" "$APP_DIR"
 codesign --verify --deep --strict "$APP_DIR"
 ditto --norsrc --noextattr "$APP_DIR" "$OUTPUT_APP_DIR"
 # File Provider may attach FinderInfo during the copy; let that update settle.
