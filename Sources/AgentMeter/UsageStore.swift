@@ -8,7 +8,10 @@ private let codexLog = Logger(subsystem: "local.agentmeter.mac", category: "code
 @MainActor
 final class UsageStore: ObservableObject {
     @Published var result = ScanResult()
-    @Published var selection: Provider?
+    /// Persisted so the dashboard reopens on the agent the user was viewing.
+    @Published var selection: Provider? {
+        didSet { UserDefaults.standard.set(selection?.rawValue, forKey: "dashboardSelection") }
+    }
     @Published private(set) var orderedProviders: [Provider]
     @Published var days = 7
     @Published var isRefreshing = false
@@ -38,6 +41,7 @@ final class UsageStore: ObservableObject {
 
     init() {
         orderedProviders = dashboardPreferences.providers
+        selection = UserDefaults.standard.string(forKey: "dashboardSelection").flatMap(Provider.init(rawValue:))
         roots = Dictionary(uniqueKeysWithValues: Provider.allCases.map { ($0, UserDefaults.standard.string(forKey: "path.\($0.rawValue)") ?? $0.defaultPath) })
         notifications.enabled = notificationsEnabled
         Task { [weak self] in

@@ -34,7 +34,6 @@ struct MenuSummary: View {
             .frame(width: 360)
             .frame(height: min(690, (NSScreen.main?.visibleFrame.height ?? 800) - 40))
             .background(MeterStyle.canvas)
-            .tint(MeterStyle.accent)
         }
     }
 
@@ -107,18 +106,14 @@ struct MenuSummary: View {
                     }
                 }.font(.system(size: 10))
             }
-            Text("토큰 합계에 Antigravity는 포함되지 않습니다.").font(.system(size: 9)).foregroundStyle(.secondary)
+            Text("토큰 합계에 Antigravity는 포함되지 않습니다.").font(.caption2).foregroundStyle(.secondary)
             if total == 0 {
                 Text(store.isRefreshing ? "사용 기록을 읽고 있습니다…" : "오늘 사용 기록이 생기면 여기에 표시됩니다.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
         .padding(14)
-        .background {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(LinearGradient(colors: [MeterStyle.accent.opacity(0.12), MeterStyle.accent.opacity(0.025)], startPoint: .topLeading, endPoint: .bottomTrailing))
-        }
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(MeterStyle.accent.opacity(0.16)))
+        .meterCard()
     }
 
     private var footer: some View {
@@ -136,7 +131,7 @@ struct MenuSummary: View {
                 .font(.system(size: 12, weight: .medium))
                 .padding(.horizontal, 13).padding(.vertical, 11)
                 .foregroundStyle(.white)
-                .background(MeterStyle.accent.gradient, in: RoundedRectangle(cornerRadius: 10))
+                .background(Color.accentColor.gradient, in: RoundedRectangle(cornerRadius: 8))
             }.buttonStyle(MenuControlStyle())
             HStack(spacing: 5) {
                 Image(systemName: "internaldrive").font(.system(size: 9))
@@ -195,12 +190,12 @@ private struct MenuProviderCard: View {
                     Text(provider == .gemini ? "구독 한도 미지원" : "한도 정보 대기")
                     Spacer()
                     if provider == .claude || provider == .antigravity {
-                        SettingsLink { Text("연결 설정").foregroundStyle(provider.tint) }
+                        SettingsLink { Text("연결 설정").foregroundStyle(Color.accentColor) }
                             .buttonStyle(.plain)
                     }
                 }.font(.system(size: 10)).foregroundStyle(.secondary)
             } else {
-                Divider().overlay(provider.tint.opacity(0.05))
+                Divider()
                 ForEach(quotas) { quota in QuotaRow(quota: quota, compact: true) }
             }
             if let error = provider == .antigravity ? store.antigravityRefreshError : provider == .claude ? store.claudeRefreshError : provider == .codex ? store.codexRefreshError : nil {

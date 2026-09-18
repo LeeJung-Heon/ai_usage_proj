@@ -7,15 +7,16 @@ struct AgentMeterApp: App {
     var body: some Scene {
         Window("Agent Meter", id: "dashboard") {
             DashboardView().environmentObject(store)
-                .frame(minWidth: 1040, minHeight: 730)
+                .frame(minWidth: 760, minHeight: 540)
         }
-        .defaultSize(width: 1200, height: 860)
-        .windowToolbarStyle(.unifiedCompact)
+        .defaultSize(width: 1080, height: 760)
+        .windowToolbarStyle(.unified)
         .commands {
             CommandGroup(after: .newItem) {
                 Button("사용량 새로고침") { Task { await store.refresh(allowClaudeInteraction: true) } }
                     .keyboardShortcut("r", modifiers: .command)
             }
+            SidebarCommands()
         }
         MenuBarExtra {
             MenuSummary().environmentObject(store)
