@@ -108,7 +108,7 @@ AGENTMETER_SIGNING_IDENTITY="인증서의 SHA-1 값" ./scripts/build-app.sh
 
 | 에이전트 | 기본 데이터 경로 | 토큰 | 구독 한도 |
 | --- | --- | --- | --- |
-| Claude Code | `~/.claude/projects/**/*.jsonl` | 자동 수집 | 기존 Claude Code 로그인으로 직접 조회; statusLine 기록은 대체 경로 |
+| Claude Code | `~/.claude/projects/**/*.jsonl` | 자동 수집 | 기존 Claude Code 로그인으로 5시간·7일·모델별 주간(예: Fable) 한도 직접 조회; statusLine 기록은 5시간·7일만 있는 대체 경로 |
 | Codex | `~/.codex/{sessions,archived_sessions}/**/*.jsonl` | 자동 수집 | 로그에 기록된 마지막 사용률·리셋 시각 |
 | Gemini CLI | `~/.gemini/tmp/**/chats/session-*.{json,jsonl}` | 토큰 필드가 있는 세션에서 수집 | v0.1 미지원 |
 | Antigravity | 실행 중인 앱의 로컬 서버 자동 탐색 | 미지원 | 모델 그룹별 사용률·리셋 시각 직접 조회 |
@@ -119,7 +119,7 @@ Codex 폴더를 변경할 때는 `sessions`의 **상위 폴더**를 선택하세
 
 ### Claude 구독 한도 연결
 
-앱 실행, 60초 자동 갱신, 수동 새로고침 때 Claude Code가 사용하는 `https://api.anthropic.com/api/oauth/usage`를 조회합니다. macOS 키체인의 기존 `Claude Code-credentials` 로그인에서 액세스 토큰을 메모리로 읽어 Claude 서버에만 전송하며, 디스크에 저장하거나 리디렉션을 따라가지 않습니다. 자동 조회는 로그인 키체인의 접근 확인 창과 인증 UI를 모두 차단합니다. 접근 권한이 없으면 **연결 및 설정 → Claude 로그인 접근 허용**에서 직접 허용할 수 있습니다. 로그인 변경은 하지 않습니다. 조회 실패 시 이유를 표시하고 마지막 기록의 실제 확인 시각을 유지합니다. 이 방식은 Claude Code의 내부 한도 조회 경로이므로 제공사 변경에 영향을 받을 수 있습니다.
+앱 실행, 60초 자동 갱신, 수동 새로고침 때 Claude Code가 사용하는 `https://api.anthropic.com/api/oauth/usage`를 조회합니다. macOS 키체인의 기존 `Claude Code-credentials` 로그인에서 액세스 토큰을 메모리로 읽어 Claude 서버에만 전송하며, 디스크에 저장하거나 리디렉션을 따라가지 않습니다. 60초 자동 조회는 로그인 키체인의 접근 확인 창과 인증 UI를 모두 차단하며, 직접 누르는 새로고침이나 **연결 및 설정 → Claude 로그인 접근 허용**에서 허용할 수 있습니다. 응답의 `limits` 배열에 있는 **모델별 주간 한도**(예: `7일 · Fable`)도 5시간·7일 한도 뒤에 표시하며, 이 정보는 직접 조회에서만 제공되고 아래 statusLine 대체 경로에는 없습니다. 로그인 변경은 하지 않습니다. 조회 실패 시 이유를 표시하고 마지막 기록의 실제 확인 시각을 유지합니다. 이 방식은 Claude Code의 내부 한도 조회 경로이므로 제공사 변경에 영향을 받을 수 있습니다.
 
 아래 statusLine 연결은 직접 조회가 불가능할 때 사용할 수 있는 대체 수집 경로입니다.
 

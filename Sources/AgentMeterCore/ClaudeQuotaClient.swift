@@ -61,7 +61,29 @@ public enum ClaudeQuotaClient {
             windows.append(QuotaWindow(id: "claude:\(key)", provider: .claude, label: label,
                                        usedPercent: used, resetsAt: reset, observedAt: now, source: "Claude 계정 조회"))
         }
+        windows += modelScopedWindows(object["limits"], now: now, fractional: fractional, standard: standard)
         return windows
+    }
+
+    // Per-model weekly windows (e.g. Fable) arrive additively in `limits[]`;
+    // a malformed row is skipped so it cannot hide the core windows.
+    private static func modelScopedWindows(_ raw: Any?, now: Date, fractional: ISO8601DateFormatter,
+                                           standard: ISO8601DateFormatter) -> [QuotaWindow] {
+        guard let rows = raw as? [Any] else { return [] }
+        return rows.compactMap { row -> QuotaWindow? in
+            guard let row = row as? [String: Any], row["kind"] as? String == "weekly_scoped",
+                  let scope = row["scope"] as? [String: Any], let model = scope["model"] as? [String: Any],
+                  let name = model["display_name"] as? String, !name.isEmpty,
+                  let used = row["percent"] as? Double, used.isFinite, used >= 0 else { return nil }
+            var reset: Date?
+            if let rawReset = row["resets_at"], !(rawReset is NSNull) {
+                guard let string = rawReset as? String,
+                      let date = fractional.date(from: string) ?? standard.date(from: string) else { return nil }
+                reset = date
+            }
+            return QuotaWindow(id: "claude:model:\(name.lowercased())", provider: .claude, label: "7일 · \(name)",
+                               usedPercent: used, resetsAt: reset, observedAt: now, source: "Claude 계정 조회")
+        }
     }
 
     public static func request(_ request: URLRequest) async throws -> (Data, Int) {

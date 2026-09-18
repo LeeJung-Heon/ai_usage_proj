@@ -53,3 +53,50 @@ private let quotaNow = Date(timeIntervalSince1970: 1_788_770_000)
         }
     }
 }
+
+@Test func claudeQuotaFetchAddsModelScopedWeeklyWindowsAfterCoreWindows() async throws {
+    let quotas = try await ClaudeQuotaClient.fetch(accessToken: "test-token", now: quotaNow) { _ in
+        (Data(#"""
+        {"five_hour":{"utilization":12,"resets_at":"2026-09-07T10:00:00Z"},
+         "seven_day":{"utilization":18,"resets_at":"2026-09-08T02:00:00Z"},
+         "limits":[
+           {"kind":"session","group":"session","percent":12,"resets_at":"2026-09-07T10:00:00Z","scope":null},
+           {"kind":"weekly_all","group":"weekly","percent":18,"resets_at":"2026-09-08T02:00:00Z","scope":null},
+           {"kind":"weekly_scoped","group":"weekly","percent":74.5,"resets_at":"2026-09-09T00:00:00Z","scope":{"model":{"display_name":"Fable"}}},
+           {"kind":"weekly_scoped","group":"weekly","percent":5,"resets_at":null,"scope":{"surface":{"display_name":"Cowork"}}}
+         ]}
+        """#.utf8), 200)
+    }
+    #expect(quotas.map(\.id) == ["claude:five_hour", "claude:seven_day", "claude:model:fable"])
+    let fable = try #require(quotas.last)
+    #expect(fable.label == "7일 · Fable")
+    #expect(fable.usedPercent == 74.5)
+    #expect(fable.resetsAt?.timeIntervalSince1970 == 1_788_912_000)
+    #expect(fable.observedAt == quotaNow && fable.provider == .claude)
+}
+
+@Test func claudeQuotaFetchAllowsModelWindowWithoutResetAndSkipsInvalidRows() async throws {
+    let quotas = try await ClaudeQuotaClient.fetch(accessToken: "test-token", now: quotaNow) { _ in
+        (Data(#"""
+        {"five_hour":{"utilization":1,"resets_at":null},
+         "limits":[
+           {"kind":"weekly_scoped","percent":-3,"resets_at":null,"scope":{"model":{"display_name":"Broken"}}},
+           {"kind":"weekly_scoped","percent":40,"resets_at":"not-a-date","scope":{"model":{"display_name":"BadDate"}}},
+           {"kind":"weekly_scoped","percent":"40","resets_at":null,"scope":{"model":{"display_name":"StringPercent"}}},
+           {"kind":"weekly_scoped","percent":40,"resets_at":null,"scope":{"model":{"display_name":""}}},
+           {"kind":"weekly_scoped","percent":66,"resets_at":null,"scope":{"model":{"display_name":"Fable"}}},
+           "garbage"
+         ]}
+        """#.utf8), 200)
+    }
+    #expect(quotas.map(\.id) == ["claude:five_hour", "claude:model:fable"])
+    #expect(quotas.last?.usedPercent == 66)
+    #expect(quotas.last?.resetsAt == nil)
+}
+
+@Test func claudeQuotaFetchIgnoresAbsentOrNullLimitsArray() async throws {
+    for payload in [#"{"five_hour":{"utilization":3,"resets_at":null}}"#, #"{"five_hour":{"utilization":3,"resets_at":null},"limits":null}"#, #"{"five_hour":{"utilization":3,"resets_at":null},"limits":[]}"#] {
+        let quotas = try await ClaudeQuotaClient.fetch(accessToken: "test-token", now: quotaNow) { _ in (Data(payload.utf8), 200) }
+        #expect(quotas.map(\.id) == ["claude:five_hour"])
+    }
+}
