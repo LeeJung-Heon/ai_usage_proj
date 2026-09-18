@@ -63,7 +63,7 @@ struct ConnectionSettings: View {
                     Task { await store.refresh(allowClaudeInteraction: true) }
                 }
                 .disabled(store.isRefreshing)
-                Text("최초 연결 시 이 버튼을 누르고, macOS 키체인 창에서 로그인 키체인 암호를 입력한 뒤 ‘항상 허용’을 선택하세요. ‘허용’은 해당 요청에만 적용됩니다. 자동 새로고침에서는 암호를 묻지 않으며, 접근할 수 없으면 마지막 한도와 안내를 표시합니다.")
+                Text("최초 연결 시 이 버튼을 누르고, macOS 키체인 창에서 로그인 키체인 암호를 입력한 뒤 ‘항상 허용’을 선택하세요. ‘허용’은 해당 요청에만 적용됩니다. 직접 누르는 새로고침에서도 접근이 없으면 같은 창이 열리며, 60초 자동 갱신에서는 묻지 않고 마지막 한도와 안내를 표시합니다.")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 Text("새로고침하면 Claude Code의 기존 로그인으로 계정의 5시간·주간 한도와 모델별 주간 한도(예: Fable)를 조회합니다. 인증 정보는 저장하지 않으며 Claude 서버에만 전송합니다. 조회가 안 되면 마지막 수집 기록을 표시합니다.")
                     .font(.callout).fixedSize(horizontal: false, vertical: true)

@@ -45,7 +45,7 @@ struct DashboardView: View {
         .tint(MeterStyle.accent)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                Button { Task { await store.refresh() } } label: {
+                Button { Task { await store.refresh(allowClaudeInteraction: true) } } label: {
                     HStack(spacing: 8) {
                         if let date = store.lastRefresh {
                             Text(date, format: .dateTime.hour().minute())

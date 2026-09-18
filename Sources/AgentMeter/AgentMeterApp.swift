@@ -13,7 +13,7 @@ struct AgentMeterApp: App {
         .windowToolbarStyle(.unifiedCompact)
         .commands {
             CommandGroup(after: .newItem) {
-                Button("사용량 새로고침") { Task { await store.refresh() } }
+                Button("사용량 새로고침") { Task { await store.refresh(allowClaudeInteraction: true) } }
                     .keyboardShortcut("r", modifiers: .command)
             }
         }

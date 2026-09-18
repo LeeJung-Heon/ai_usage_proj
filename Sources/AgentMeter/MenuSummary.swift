@@ -43,7 +43,7 @@ struct MenuSummary: View {
             MeterMark(size: 22)
             Text("사용량 요약").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
             Spacer()
-            Button { Task { await store.refresh() } } label: {
+            Button { Task { await store.refresh(allowClaudeInteraction: true) } } label: {
                 ZStack {
                     if store.isRefreshing { ProgressView().controlSize(.small) }
                     else { Image(systemName: "arrow.clockwise") }

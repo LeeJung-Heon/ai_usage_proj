@@ -1,5 +1,8 @@
 import SwiftUI
+import OSLog
 import AgentMeterCore
+
+private let claudeLog = Logger(subsystem: "local.agentmeter.mac", category: "claude-quota")
 
 @MainActor
 final class UsageStore: ObservableObject {
@@ -84,7 +87,9 @@ final class UsageStore: ObservableObject {
             scanned.quotas.removeAll { $0.provider == .claude }
             scanned.quotas += quotas
             claudeRefreshError = nil
+            claudeLog.info("Claude 한도 조회 성공: \(quotas.count, privacy: .public)개 창")
         } catch {
+            claudeLog.error("Claude 한도 조회 실패: \(String(describing: error), privacy: .public)")
             // Keep the newest known observation, never relabel cached data as fresh.
             let previous = result.quotas.filter { $0.provider == .claude }
             let candidates = scanned.quotas.filter { $0.provider == .claude } + previous
