@@ -90,8 +90,9 @@ struct ConnectionSettings: View {
                     .disabled(store.isRefreshing)
             } header: { Text("Antigravity 구독 한도") }
             Section {
-                Text("Codex 한도는 마지막 로컬 기록 기준이며 15분이 지나면 이전 기록으로 표시합니다. Gemini 구독 한도 연동은 이 버전에서 지원하지 않습니다. 로컬 토큰만으로 한도 사용률을 추정하지 않습니다.")
+                Text("Codex 한도는 새로고침 때 Codex 홈의 auth.json에 있는 ChatGPT 로그인으로 직접 조회하며, 조회가 안 되면 마지막 로컬 기록을 표시하고 15분이 지나면 이전 기록으로 표시합니다. Gemini 구독 한도 연동은 이 버전에서 지원하지 않습니다. 로컬 토큰만으로 한도 사용률을 추정하지 않습니다.")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                if let error = store.codexRefreshError { Text(error).font(.caption).foregroundStyle(.orange) }
             } header: { Text("집계 범위") }
         }.formStyle(.grouped).padding(8).frame(width: 650, height: 770)
             .task { await store.updateNotifications() }

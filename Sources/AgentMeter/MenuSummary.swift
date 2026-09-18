@@ -203,7 +203,7 @@ private struct MenuProviderCard: View {
                 Divider().overlay(provider.tint.opacity(0.05))
                 ForEach(quotas) { quota in QuotaRow(quota: quota, compact: true) }
             }
-            if let error = provider == .antigravity ? store.antigravityRefreshError : provider == .claude ? store.claudeRefreshError : nil {
+            if let error = provider == .antigravity ? store.antigravityRefreshError : provider == .claude ? store.claudeRefreshError : provider == .codex ? store.codexRefreshError : nil {
                 Text(error).font(.system(size: 10)).foregroundStyle(.orange)
                     .fixedSize(horizontal: false, vertical: true)
             }

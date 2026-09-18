@@ -231,13 +231,13 @@ struct ProviderCard: View {
             if quotas.isEmpty {
                 VStack(alignment: .leading, spacing: 7) {
                     Label(provider == .gemini ? "구독 한도 미지원" : "한도 정보 대기", systemImage: "gauge.with.dots.needle.0percent").font(.caption.weight(.medium)).foregroundStyle(.secondary)
-                    Text(provider == .claude ? "Claude Code 로그인 후 새로고침하세요." : provider == .gemini ? "로컬 기록의 토큰 사용량을 집계합니다." : provider == .antigravity ? "Antigravity를 실행하고 로그인한 뒤 새로고침하세요." : "Codex 사용 후 기록된 한도가 표시됩니다.")
+                    Text(provider == .claude ? "Claude Code 로그인 후 새로고침하세요." : provider == .gemini ? "로컬 기록의 토큰 사용량을 집계합니다." : provider == .antigravity ? "Antigravity를 실행하고 로그인한 뒤 새로고침하세요." : "Codex CLI에서 ChatGPT 계정으로 로그인한 뒤 새로고침하세요.")
                         .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }.frame(minHeight: 57, alignment: .topLeading)
             } else {
                 ForEach(quotas) { quota in QuotaRow(quota: quota) }
             }
-            if let error = provider == .antigravity ? store.antigravityRefreshError : provider == .claude ? store.claudeRefreshError : nil {
+            if let error = provider == .antigravity ? store.antigravityRefreshError : provider == .claude ? store.claudeRefreshError : provider == .codex ? store.codexRefreshError : nil {
                 Text(error).font(.caption).foregroundStyle(.orange)
                     .fixedSize(horizontal: false, vertical: true)
             }

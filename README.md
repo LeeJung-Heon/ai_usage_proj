@@ -109,7 +109,7 @@ AGENTMETER_SIGNING_IDENTITY="인증서의 SHA-1 값" ./scripts/build-app.sh
 | 에이전트 | 기본 데이터 경로 | 토큰 | 구독 한도 |
 | --- | --- | --- | --- |
 | Claude Code | `~/.claude/projects/**/*.jsonl` | 자동 수집 | 기존 Claude Code 로그인으로 5시간·7일·모델별 주간(예: Fable) 한도 직접 조회; statusLine 기록은 5시간·7일만 있는 대체 경로 |
-| Codex | `~/.codex/{sessions,archived_sessions}/**/*.jsonl` | 자동 수집 | 로그에 기록된 마지막 사용률·리셋 시각 |
+| Codex | `~/.codex/{sessions,archived_sessions}/**/*.jsonl` | 자동 수집 | 기존 Codex CLI ChatGPT 로그인으로 직접 조회; 로그의 마지막 기록은 대체 경로 |
 | Gemini CLI | `~/.gemini/tmp/**/chats/session-*.{json,jsonl}` | 토큰 필드가 있는 세션에서 수집 | v0.1 미지원 |
 | Antigravity | 실행 중인 앱의 로컬 서버 자동 탐색 | 미지원 | 모델 그룹별 사용률·리셋 시각 직접 조회 |
 
@@ -142,6 +142,10 @@ Agent Meter.app/Contents/Resources/AgentMeterCapture
 
 연결 해제는 Claude 설정에서 AgentMeterCapture를 호출하는 `statusLine` 항목을 제거하면 됩니다. 백업 전체 복원은 이후 변경한 다른 설정도 되돌리므로 필요한 항목만 복원하세요. 앱을 옮기면 `statusLine.command`의 수집기 경로도 업데이트해야 합니다.
 
+### Codex 구독 한도 연결
+
+앱 실행, 60초 자동 갱신, 수동 새로고침 때 Codex CLI가 `/status`에 쓰는 `https://chatgpt.com/backend-api/wham/usage`를 조회합니다. 설정된 Codex 홈의 `auth.json`에서 ChatGPT 로그인의 액세스 토큰과 계정 ID를 메모리로 읽어 해당 서버에만 전송하며, 디스크에 저장하거나 리디렉션을 따라가지 않고 리프레시 토큰은 사용하지 않습니다. API 키 로그인은 구독 한도가 없어 미지원으로 표시합니다. 응답의 기본 한도는 로컬 기록과 같은 `codex:codex:primary`·`secondary` 창으로 표시하고, `additional_rate_limits`의 모델별 한도(예: `gpt-reserve · 7일`)를 뒤에 붙입니다. 토큰이 만료되면 Codex CLI에서 다시 로그인하라고 안내하며 그동안은 로그의 마지막 기록을 표시합니다. 이 방식은 Codex CLI의 내부 조회 경로이므로 제공사 변경에 영향을 받을 수 있습니다. 이 Mac의 **Codex CLI 0.154.0**에서 실제 조회를 확인했습니다.
+
 ### Antigravity 연결
 
 Antigravity 앱을 실행하고 로그인한 뒤 Agent Meter에서 새로고침하세요. 별도 API 키나 기록 폴더 설정은 필요하지 않습니다. 이 Mac의 **Antigravity 2.12.2**에서 실제 조회를 확인했습니다.
@@ -158,7 +162,7 @@ Antigravity 앱을 실행하고 로그인한 뒤 Agent Meter에서 새로고침�
 
 표시된 퍼센트는 **사용한 비율**입니다. 한도 윈도우의 길이를 그대로 표시하므로 Codex의 기본 한도가 항상 5시간인 것으로 가정하지 않습니다.
 
-앱 새로고침은 로컬 토큰 기록을 다시 읽고 Claude·Antigravity 한도를 조회합니다. 각 한도에 별도의 **확인 시각**을 표시하며, 15분 이상 지났거나 리셋 시각이 지나면 이전 기록으로 표시합니다. Codex 및 Claude statusLine 대체 기록은 에이전트가 새 기록을 생성해야 값이 바뀝니다. 캐시를 다시 읽었다는 이유로 확인 시각을 현재로 바꾸지 않으며, 토큰 합계로 구독 한도를 추정하지 않습니다.
+앱 새로고침은 로컬 토큰 기록을 다시 읽고 Claude·Codex·Antigravity 한도를 조회합니다. 각 한도에 별도의 **확인 시각**을 표시하며, 15분 이상 지났거나 리셋 시각이 지나면 이전 기록으로 표시합니다. Codex 로그 기록과 Claude statusLine 대체 기록은 에이전트가 새 기록을 생성해야 값이 바뀝니다. 캐시를 다시 읽었다는 이유로 확인 시각을 현재로 바꾸지 않으며, 토큰 합계로 구독 한도를 추정하지 않습니다.
 
 ### 사용량 90% 알림
 
@@ -202,6 +206,8 @@ open "dist/Agent Meter.app"
 | `Sources/AgentMeterCore/AntigravityDiscovery.swift` | 실행 중인 Antigravity와 로컬 포트 탐색 |
 | `Sources/AgentMeterCore/AntigravityQuotaMonitor.swift` | 한도 새로고침, 실패 시 마지막 관측 보존 |
 | `Sources/AgentMeterCore/ClaudeQuotaClient.swift` | Claude 계정 한도 조회, 응답 검증, 오류 처리 |
+| `Sources/AgentMeterCore/CodexQuotaClient.swift` | Codex 계정 한도 조회, auth.json 파싱, 기간 라벨 |
+| `Sources/AgentMeter/CodexCredentials.swift` | 기존 Codex CLI 로그인 파일 읽기 |
 | `Sources/AgentMeter/ClaudeCredentials.swift` | 기존 Claude Code 키체인 로그인 읽기 |
 | `Sources/AgentMeterCore/ClaudeBridge.swift` | 한도 메타데이터 저장, 설정 백업·연결 |
 | `Sources/AgentMeterCore/QuotaAlerts.swift` | 90% 한도 판정, 중복 방지 이력, 실패 재시도 |

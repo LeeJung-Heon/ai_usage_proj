@@ -3,6 +3,7 @@ import OSLog
 import AgentMeterCore
 
 private let claudeLog = Logger(subsystem: "local.agentmeter.mac", category: "claude-quota")
+private let codexLog = Logger(subsystem: "local.agentmeter.mac", category: "codex-quota")
 
 @MainActor
 final class UsageStore: ObservableObject {
@@ -17,6 +18,7 @@ final class UsageStore: ObservableObject {
     @Published var bridgeMessage: String?
     @Published var bridgeReadError: String?
     @Published private(set) var claudeRefreshError: String?
+    @Published private(set) var codexRefreshError: String?
     @Published private(set) var antigravityRefreshError: String?
     @Published var notificationStatus = "알림 권한을 확인하고 있습니다."
     @Published var notificationsEnabled = UserDefaults.standard.object(forKey: "quotaNotificationsEnabled") as? Bool ?? true {
@@ -98,6 +100,23 @@ final class UsageStore: ObservableObject {
             scanned.quotas.removeAll { $0.provider == .claude }
             scanned.quotas += latest.sorted { $0.id < $1.id }
             claudeRefreshError = error.localizedDescription
+        }
+        do {
+            let auth = try CodexCredentials.load(codexHome: roots[.codex] ?? Provider.codex.defaultPath)
+            let quotas = try await CodexQuotaClient.fetch(accessToken: auth.accessToken, accountID: auth.accountID)
+            scanned.quotas.removeAll { $0.provider == .codex }
+            scanned.quotas += quotas
+            codexRefreshError = nil
+            codexLog.info("Codex 한도 조회 성공: \(quotas.count, privacy: .public)개 창")
+        } catch {
+            codexLog.error("Codex 한도 조회 실패: \(String(describing: error), privacy: .public)")
+            let previous = result.quotas.filter { $0.provider == .codex }
+            let candidates = scanned.quotas.filter { $0.provider == .codex } + previous
+            let latest = Dictionary(grouping: candidates, by: \.id)
+                .compactMap { $0.value.max { $0.observedAt < $1.observedAt } }
+            scanned.quotas.removeAll { $0.provider == .codex }
+            scanned.quotas += latest.sorted { $0.id < $1.id }
+            codexRefreshError = error.localizedDescription
         }
         let antigravity = await antigravityRefresh
         scanned.quotas += antigravity.quotas

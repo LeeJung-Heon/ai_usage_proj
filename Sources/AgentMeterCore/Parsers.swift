@@ -71,7 +71,7 @@ public enum UsageParser {
                     for key in ["primary", "secondary"] {
                         guard let window = limits[key] as? [String: Any], let percent = window["used_percent"] as? Double, percent.isFinite, percent >= 0 else { continue }
                         let minutes = number(window, "window_minutes")
-                        let duration = minutes >= 1440 && minutes % 1440 == 0 ? "\(minutes / 1440)일" : minutes >= 60 && minutes % 60 == 0 ? "\(minutes / 60)시간" : minutes > 0 ? "\(minutes)분" : "사용 한도"
+                        let duration = QuotaDuration.label(minutes: minutes)
                         let id = "codex:\(limitID):\(key)"
                         let label = limitID == "codex" ? duration : "\(limits["limit_name"] as? String ?? limitID) · \(duration)"
                         quotas[id] = QuotaWindow(id: id, provider: .codex, label: label, usedPercent: percent,
