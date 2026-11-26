@@ -2,6 +2,8 @@
 
 Claude Code, Codex, Gemini CLI, Antigravity의 사용량을 모아 보는 **SwiftUI macOS 네이티브 앱**입니다. 토큰은 Claude·Codex·Gemini의 로컬 사용 기록에서 읽고, Claude와 Antigravity 구독 한도는 기존 로그인으로 조회합니다. 별도 API 키는 필요하지 않습니다.
 
+> 바로가기: [화면 예시](#화면-예시) · [수집·집계 구조](#수집집계-구조) · [기능](#기능) · [연결 범위](#연결-범위) · [집계 방식](#집계-방식) · [macOS 앱 설치](#macos-앱-설치)
+
 ## 화면 예시
 
 실제 앱의 다크 모드 화면입니다. 사용량과 한도는 2026년 9월 18일 캡처 시점의 값입니다.
@@ -13,6 +15,10 @@ Claude Code, Codex, Gemini CLI, Antigravity의 사용량을 모아 보는 **Swif
 **에이전트 상세** — 사이드바에서 에이전트를 고르면 해당 에이전트의 한도, 토큰 요약, 일별 토큰 차트, 모델별 입력·출력·캐시 사용량을 확인합니다.
 
 ![Agent Meter Claude 상세: 한도, 토큰 요약, 사용 추이와 모델별 사용량 표](docs/images/usage-details.jpg)
+
+## 수집·집계 구조
+
+![멀티 AI 에이전트 사용량 수집·집계 및 한도 알림 구조](docs/diagrams/collection-architecture.png)
 
 ## macOS 앱 설치
 
